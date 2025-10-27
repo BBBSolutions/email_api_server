@@ -21,17 +21,7 @@ const contactController = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    // Call the sendMail function
-    await sendMail({
-      name,
-      email,
-      phone,
-      investmentType,
-      investmentAmount,
-      message,
-    });
-
-     // Step 2️⃣: Submit data to Google Form
+    // Submit data to Google Form
     await submitToGoogleForm({
       name,
       email,
@@ -49,7 +39,7 @@ const contactController = async (req: Request, res: Response) => {
       )
     );
   } catch (error) {
-    console.error("Email sending error:", error);
+    console.error("Error while submitting the data", error);
 
     if (error instanceof ApiError) {
       return res.status(error.statusCode).json({
@@ -61,7 +51,7 @@ const contactController = async (req: Request, res: Response) => {
     // fallback for unexpected errors
     return res.status(500).json({
       success: false,
-      message: "An unexpected server error occurred while sending the email.",
+      message: "An unexpected server error occurred.",
     });
   }
 };  
