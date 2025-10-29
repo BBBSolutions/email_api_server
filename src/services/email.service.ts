@@ -1,46 +1,52 @@
 import nodemailer from "nodemailer";
-import { transporter } from "../config/mailConfig";
+import { SmtpCfg, transporter, getTransporter } from "../config/mailConfig";
 
-// Define the email content structure
-interface MailOptions {
-  name: string;
-  email: string;
-  phone: string; // string is better for phone numbers
-  investmentType: string;
-  investmentAmount?: string;
-  message: string;
+// parameters needed to send an email.
+export interface SendMailParams {
+  to: string;
+  subject: string;
+  htmlBody: string;
+  from?: string;
+  replyTo?: string;
+  smtpCfg?: SmtpCfg;
 }
 
-// Sends an email with form details
-export const sendMail = async (data: MailOptions): Promise<void> => {
-  try {
-    // Structure the email content
-    const mailOptions: nodemailer.SendMailOptions = {
-      from: `"FundStar Website" <${process.env.GMAIL_USER}>`, // your verified Gmail
-      to: process.env.RECEIVER_EMAIL, // receiver email
-      replyTo: data.email, // user's email (so you can reply directly)
-      subject: "New Contact Form Submission from FundStar Website", // default subject
-      html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${data.name}</p>
-        <p><strong>Email:</strong> ${data.email}</p>
-        <p><strong>Phone Number:</strong> ${data.phone}</p>
-        <p><strong>investmentType:</strong> ${data.investmentType}</p>
-        ${
-          data.investmentAmount
-            ? `<p><strong>Investment Amount:</strong> ${data.investmentAmount}</p>`
-            : ""
-        }
-        <p><strong>Message:</strong></p>
-        <p>${data.message}</p>
-      `,
-    };
+export const sendMail = async (
+  params: SendMailParams
+): Promise<nodemailer.SentMessageInfo> => {
+  const { to, subject, htmlBody, replyTo, smtpCfg } = params;
 
-    // Send the email
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully: ", info.messageId);
-  } catch (error) {
-    console.error("Error sending email: ", error);
-    throw new Error("Email sending failed");
+  // 1. Determine the "from" address
+  const from =
+    params.from || // 1. From the params
+    smtpCfg?.from || // 2. From the site-specific SMTP config
+    process.env.SMTP_FROM || // 3. From a global .env variable
+    `"My Service" <${smtpCfg?.user || process.env.GMAIL_USER}>`; // 4. Default
+
+  // 2. Choose the correct transporter
+  const transport = smtpCfg ? getTransporter(smtpCfg) : transporter;
+
+  // 3. Define the final mail options
+  const mailOptions: nodemailer.SendMailOptions = {
+    from,
+    to,
+    replyTo,
+    subject,
+    html: htmlBody, // Use the pre-built HTML
+  };
+
+  // 4. Send the email
+  try {
+    const info = await transport.sendMail(mailOptions);
+    console.log(
+      `Email sent successfully via ${
+        (transport.options as any)?.auth?.user || "global"
+      }:`,
+      info.messageId
+    );
+    return info;
+  } catch (err) {
+    console.error("Error sending email:", err);
+    throw err; // Re-throw the error to be caught by the controller
   }
 };

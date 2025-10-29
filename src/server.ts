@@ -1,9 +1,11 @@
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { ApiError } from "./utils/ApiError";
 
 import contactRoute from "./routes/contact.route";
+import fundstarRoute from "./routes/fundstar.route"
 
 dotenv.config();
 
@@ -33,6 +35,7 @@ app.use(cookieParser());
 
 // ✅ Routes
 app.use("/api", contactRoute);
+app.use("/api/fundstar", fundstarRoute)
 
 app.get("/", (req, res) => {
   res.send({ message: "Hello, World!" });
@@ -41,6 +44,22 @@ app.get("/", (req, res) => {
 // Health check
 app.get("/health", (req, res) => {
   res.status(200).send({ status: "OK" });
+});
+
+// / --- Global Error Handler ---
+// This will catch any errors you `throw` in your services
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      success: err.success,
+      message: err.message,
+    });
+  }
+  console.error("Unhandled Error:", err);
+  return res.status(500).json({
+    success: false,
+    message: "An unexpected server error occurred.",
+  });
 });
 
 const PORT = process.env.PORT || 8001;
