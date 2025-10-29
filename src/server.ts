@@ -6,6 +6,7 @@ import { ApiError } from "./utils/ApiError";
 
 import contactRoute from "./routes/contact.route";
 import fundstarRoute from "./routes/fundstar.route"
+import bbbsolutionsRoute from "./routes/bbbsolutions.route"
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use(cookieParser());
 // ✅ Routes
 app.use("/api", contactRoute);
 app.use("/api/fundstar", fundstarRoute)
+app.use("/api/bbbsolutions", bbbsolutionsRoute)
 
 app.get("/", (req, res) => {
   res.send({ message: "Hello, World!" });
