@@ -4,12 +4,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export interface SmtpCfg {
-  host?: string;
-  port?: number;
-  secure?: boolean;
   user?: string;
   pass?: string;
-  from?: string;
   key?: string; // unique cache key for transporter
 }
 
@@ -19,27 +15,22 @@ const transportCache = new Map<string, nodemailer.Transporter>();
 export function buildTransporter(cfg?: SmtpCfg): nodemailer.Transporter {
   const key = cfg?.key || cfg?.user || "global";
 
-  if (transportCache.has(key)) return transportCache.get(key)!;
+  if (transportCache.has(key)) {
+    return transportCache.get(key)!;
+  }
 
-  // prefer explicit host/port/secure over `service: "gmail"`
-  const host = cfg?.host || process.env.SMTP_HOST || "smtp.gmail.com";
-  const port = cfg?.port ?? Number(process.env.SMTP_PORT ?? 465);
-  const secure =
-    typeof cfg?.secure === "boolean"
-      ? cfg.secure
-      : process.env.SMTP_SECURE === "true";
-  const user = cfg?.user || process.env.SMTP_USER || process.env.GMAIL_USER;
-  const pass = cfg?.pass || process.env.SMTP_PASS || process.env.GMAIL_PASS;
+  const user = cfg?.user || process.env.GMAIL_USER;
+  const pass = cfg?.pass || process.env.GMAIL_PASS;
 
-  const options: any = {
-    host,
-    port,
-    secure,
-  };
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: user,
+      pass: pass,
+    },
+  });
 
-  if (user) options.auth = { user, pass };
-
-  const transporter = nodemailer.createTransport(options);
+  console.log(`Creating new email transporter for: ${key}`);
   transportCache.set(key, transporter);
 
   return transporter;
@@ -51,9 +42,9 @@ export const transporter = buildTransporter();
 // Optional: verify the global transporter at startup (non-blocking)
 transporter.verify((err, success) => {
   if (err) {
-    console.error("Email service connection failed:", err);
+    console.error("Global email service connection failed:", err);
   } else {
-    console.log("Email service is ready to send messages:", success);
+    console.log("Global email service is ready to send messages:", success);
   }
 });
 

@@ -26,14 +26,15 @@ const fundstarContactController = async (req: Request, res: Response) => {
 
     // Get fundstar specific SMTP credentials from .env
     const fundstarSmtp: SmtpCfg = {
-      user: process.env.SITE_FUNDSTAR_GMAIL_USER,
-      pass: process.env.SITE_FUNDSTAR_GMAIL_PASS,
+      user: process.env.FUNDSTAR_GMAIL_USER!,
+      pass: process.env.FUNDSTAR_GMAIL_PASS!,
       key: "fundstar",
     };
 
     // Call the generic sendMail service
     await sendMail({
-      to: process.env.SITE_FUNDSTAR_RECEIVER_EMAIL!,
+      to: process.env.FUNDSTAR_RECEIVER_EMAIL!,
+      from: `"Fundstar Leads" <${process.env.FUNDSTAR_GMAIL_USER!}>`,
       subject: `New Lead: ${name} (${investmentType})`,
       htmlBody: htmlBody,
       replyTo: email,
