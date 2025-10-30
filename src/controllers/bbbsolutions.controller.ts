@@ -3,6 +3,7 @@ import { sendMail } from "../services/email.service";
 import { SmtpCfg } from "../config/mailConfig";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
+import { submitToGoogleForm } from "../services/google_Form.service";
 
 const bbbsolutionsContactController = async (req: Request, res: Response) => {
   try {
@@ -36,6 +37,18 @@ const bbbsolutionsContactController = async (req: Request, res: Response) => {
       htmlBody: htmlBody,
       replyTo: email,
       smtpCfg: bbbsolutionsSmtp,
+    });
+
+    const bbbsolutinsFieldMappings = {
+      [process.env.BBBSOLUTIONS_ENTRY_NAME!]: name,
+      [process.env.BBBSOLUTIONS_ENTRY_EMAIL!]: email,
+      [process.env.BBBSOLUTIONS_ENTRY_PHONE!]: phone,
+      [process.env.BBBSOLUTIONS_ENTRY_MESSAGE!]: message,
+    };
+
+    await submitToGoogleForm({
+      formUrl: process.env.BBBSOLUTIONS_GOOGLE_FORM_URL!,
+      fieldMappings: bbbsolutinsFieldMappings,
     });
 
     return res.status(200).json(
