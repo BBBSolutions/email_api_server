@@ -9,6 +9,10 @@ const fundstarContactController = async (req: Request, res: Response) => {
     const { name, email, phone, investmentType, investmentAmount, message } =
       req.body;
 
+    if (!name || !email || !message || !phone || !investmentType) {
+      throw new ApiError(400, "All fields are required");
+    }
+
     //   Build the HTML template for Site
     const htmlBody = `
         <h2>New Contact Form Submission</h2>

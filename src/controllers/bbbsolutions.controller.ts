@@ -8,6 +8,10 @@ const bbbsolutionsContactController = async (req: Request, res: Response) => {
   try {
     const { name, email, phone, message } = req.body;
 
+    if (!name || !email || !message || !phone) {
+      throw new ApiError(400, "All fields are required");
+    }
+
     //   Build the HTML template for Site
     const htmlBody = `
         <h2>New Contact Form Submission</h2>
