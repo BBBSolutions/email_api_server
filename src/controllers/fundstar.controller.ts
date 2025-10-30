@@ -3,6 +3,7 @@ import { sendMail } from "../services/email.service";
 import { SmtpCfg } from "../config/mailConfig";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
+import { submitToGoogleForm } from "../services/google_Form.service";
 
 const fundstarContactController = async (req: Request, res: Response) => {
   try {
@@ -43,6 +44,20 @@ const fundstarContactController = async (req: Request, res: Response) => {
       htmlBody: htmlBody,
       replyTo: email,
       smtpCfg: fundstarSmtp,
+    });
+
+    const fundstarFieldMappings = {
+      [process.env.FUNDSTAR_ENTRY_NAME!]: name,
+      [process.env.FUNDSTAR_ENTRY_EMAIL!]: email,
+      [process.env.FUNDSTAR_ENTRY_PHONE!]: phone,
+      [process.env.FUNDSTAR_ENTRY_INVESTMENT_TYPE!]: investmentType,
+      [process.env.FUNDSTAR_ENTRY_INVESTMENT_AMOUNT!]: investmentAmount || "", // Use empty string if optional
+      [process.env.FUNDSTAR_ENTRY_MESSAGE!]: message,
+    };
+
+    await submitToGoogleForm({
+      formUrl: process.env.FUNDSTAR_GOOGLE_FORM_URL!,
+      fieldMappings: fundstarFieldMappings,
     });
 
     return res.status(200).json(
