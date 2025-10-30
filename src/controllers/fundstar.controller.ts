@@ -3,7 +3,7 @@ import { sendMail } from "../services/email.service";
 import { SmtpCfg } from "../config/mailConfig";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
-import { submitToGoogleForm } from "../services/google_Form.service";
+import { submitToGoogleForm } from "../services/googleForm.service";
 
 const fundstarContactController = async (req: Request, res: Response) => {
   try {

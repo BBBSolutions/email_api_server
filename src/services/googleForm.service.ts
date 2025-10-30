@@ -1,30 +1,29 @@
-interface GoogleFormData {
-  name: string;
-  email: string;
-  phone: string;
-  investmentType: string;
-  investmentAmount: string;
-  message: string;
+import { ApiError } from "../utils/ApiError";
+
+export interface GoogleFormData {
+  formUrl: string;
+  // A simple key-value map where the key is the Google Form Entry ID
+  // e.g., { "entry.123456": "Aditya", "entry.789012": "test@email.com" }
+  fieldMappings: Record<string, string>;
 }
 
 export const submitToGoogleForm = async (
   data: GoogleFormData
 ): Promise<void> => {
-  try {
-    const formUrl = process.env.GOOGLE_FORM_URL;
+  const { formUrl, fieldMappings } = data;
 
-    // Map form fields to Google Form entry IDs
+  if (!formUrl) {
+    throw new ApiError(500, "Google form URL is not defined in .env");
+  }
+
+  try {
     const formData = new URLSearchParams();
 
-    formData.append(process.env.GOOGLE_FORM_ENTRY_NAME!, data.name);
-    formData.append(process.env.GOOGLE_FORM_ENTRY_EMAIL!, data.email);
-    formData.append(process.env.GOOGLE_FORM_ENTRY_PHONE!, data.phone);
-    formData.append(process.env.GOOGLE_FORM_ENTRY_INVESTMENT_TYPE!, data.investmentType);
-    formData.append(process.env.GOOGLE_FORM_ENTRY_INVESTMENT_AMOUNT!, data.investmentAmount);
-    formData.append(process.env.GOOGLE_FORM_ENTRY_MESSAGE!, data.message);
+    for (const entryId in fieldMappings) {
+      formData.append(entryId, fieldMappings[entryId]);
+    }
 
-    // Send POST request to Google Form
-    const response = await fetch(formUrl!, {
+    const response = await fetch(formUrl, {
       method: "POST",
       body: formData,
     });
@@ -34,7 +33,7 @@ export const submitToGoogleForm = async (
         "❌ Failed to submit data to Google Form",
         await response.text()
       );
-      throw new Error("Google Form submission failed");
+      throw new ApiError(500, "Google Form submission failed");
     }
 
     console.log("✅ Data submitted successfully to Google Form");
