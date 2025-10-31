@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import { ApiError } from "./utils/ApiError";
 
 // Import your routes
-import contactRoute from "./routes/contact.route";
 import fundstarRoute from "./routes/fundstar.route";
 import bbbsolutionsRoute from "./routes/bbbsolutions.route";
 
@@ -37,7 +36,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 // --- Routes ---
-app.use("/api", contactRoute);
 app.use("/api/fundstar", fundstarRoute);
 app.use("/api/bbbsolutions", bbbsolutionsRoute);
 
